@@ -32,24 +32,23 @@ function removeChildren(element) {
  */
 function drawPlayer(playerName) {
   const player = document.createElement("div");
-  const title = document.createElement("p");
   const scoreContainer = document.createElement("div");
-  const scoreText = document.createElement("span");
+  const name = document.createElement("span");
   const scoreNumber = document.createElement("span");
   const scoreInput = document.createElement("input");
   const btn = document.createElement("button");
 
   // Setup classes for elements
   player.classList.add("player");
-  title.classList.add("playerTitle");
-  scoreContainer.classList.add("currentScore");
+  name.classList.add("player-title");
+  scoreContainer.classList.add("current-score");
+  scoreNumber.classList.add("score");
   btn.classList.add("btn");
 
   // Now for the text values for the elements
-  title.innerHTML = playerName;
-  scoreText.innerHTML = "Score: ";
+  name.innerHTML = playerName + ": ";
   scoreNumber.innerHTML = 0;
-  btn.innerHTML = "Submit";
+  btn.innerHTML = "Add";
 
   // Link the button's ID, which is how the increment score func accesses
   // the current score
@@ -61,11 +60,10 @@ function drawPlayer(playerName) {
   scoreInput.type = "number";
 
   // Build scoreContainer
-  scoreContainer.appendChild(scoreText);
+  scoreContainer.appendChild(name);
   scoreContainer.appendChild(scoreNumber);
 
   // Combine all the individual elements
-  player.appendChild(title);
   player.appendChild(scoreContainer);
   player.appendChild(scoreInput);
   player.appendChild(btn);
@@ -77,35 +75,74 @@ function drawPlayer(playerName) {
 }
 
 /**
- * Increments player score.
+ * Gets input box value and increments score by that value, then marks current winner(s)
  * @param playerName {string}
  */
 function incrementScore(playerName) {
   const score =  document.getElementById(playerName + "-score");
+  const currentScore = Number(score.innerHTML);
   const inputValue = document.getElementById(playerName + "-input");
-  if (Number(inputValue.value)) {
-    score.innerHTML = Number(score.innerHTML) + Number(inputValue.value);
+  const inputScore = Number(inputValue.value);
+  if (inputScore) {
+    // change score's display value to currentScore + inputScore & clear out input box
+    score.innerHTML = currentScore + inputScore;
     inputValue.value = '';
+    markWinner();
   }
 }
 
 /**
- * Builds the game-board upon pressing the start button.
+ * Marks scores that are currently winner (Ties are allowed!)
+ */
+function markWinner() {
+  const scores = document.getElementsByClassName("score");
+  const highScore = getHighScore(scores);
+  let i;
+  let score;
+  for (i=0;i<scores.length;i++) {
+    score = Number(scores[i].innerHTML);
+    if (score === highScore) {
+      scores[i].classList.add("winner");
+    } else {
+      scores[i].classList.remove("winner");
+    }
+  }
+}
+
+/**
+ * Returns current high score
+ * @param scores {array} of {HTMLElement}s
+ * @returns {number}
+ */
+function getHighScore(scores) {
+  const scoreList = [];
+  let i;
+
+  for (i=0;i<scores.length;i++){
+    scoreList.push(Number(scores[i].innerHTML));
+  }
+  return Math.max(...scoreList);
+}
+
+/**
+ * Main function
+ * Creates listeners for start and reset buttons, then links those buttons to
+ * anonymous functions that setup game board or reset the board
  */
 function start() {
-  const playerContainer = document.getElementById("game-container");
-  const resetButton = document.getElementById("resetButton");
+  const game = document.getElementById("game-container");
+  const resetButton = document.getElementById("reset-button");
   const startButton = document.getElementById("start-button");
+  const selector = document.getElementById("number-selector");
   const players = [];
   let i;
   let name;
 
   startButton.onclick = function () {
-    const numPlayers = Number(document.getElementById("numberSelector").value);
+    const numPlayers = Number(document.getElementById("number-selector").value);
     toggleElementVisibility("starter-container");
     for (i=0;i<numPlayers;i++) {
       name = prompt(`Enter Player ${i + 1}'s name: `);
-
       // If a player's name isn't input, un-hide starter-container, alert user
       if (!name) {
         alert("You must enter a name for each player");
@@ -115,23 +152,19 @@ function start() {
         players.push(name);
       }
     }
-
     // Draw each player container
     for (i=0;i<players.length;i++) {
-      playerContainer.appendChild(drawPlayer(players[i]));
+      game.appendChild(drawPlayer(players[i]));
     }
-
     // Un-hide the reset button.
     resetButton.style.display = "block";
-    // Clear out player list to prevent old players from being added in subsequent games
+    // Clear out player array to prevent old players from being added in subsequent games
     while (players[0]) {
       players.pop(0)
     }
   };
 
   resetButton.onclick = function () {
-    const game = document.getElementById("game-container");
-    const selector = document.getElementById("numberSelector");
     selector.value = "2";
     removeChildren(game);
     resetButton.style.display = "none";
