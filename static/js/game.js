@@ -165,10 +165,9 @@ function startGame(game, resetButton) {
 
   // Clear out player array to prevent old players from being added in subsequent games
   while (players[0]) {
-    players.pop(0)
+    players.pop()
   }
 }
-
 
 /**
  * Main function
