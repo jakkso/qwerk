@@ -70,6 +70,12 @@ function drawPlayer(playerName) {
 
   // Adding event listener
   btn.addEventListener("click", function() {incrementScore(playerName)});
+  scoreInput.addEventListener("keyup", function (evt) {
+    evt.preventDefault();
+    if (evt.key === "Enter") {
+      incrementScore(playerName);
+    }
+  });
 
   return player;
 }
@@ -125,46 +131,72 @@ function getHighScore(scores) {
 }
 
 /**
+ * Gets player names, draws score boxes
+ * @param game {HTMLDivElement}
+ * @param resetButton {HTMLButtonElement}
+ */
+function startGame(game, resetButton) {
+  const numPlayers = Number(document.getElementById("number-selector").value);
+  const players = [];
+  let i;
+  let name;
+  toggleElementVisibility("starter-container");
+
+  for (i=0;i<numPlayers;i++) {
+    name = prompt(`Enter Player ${i + 1}'s name: `);
+
+    // If a player's name isn't input, un-hide starter-container, alert user
+    if (!name) {
+      alert("You must enter a name for each player");
+      toggleElementVisibility("starter-container");
+      return;
+    } else {
+      players.push(name);
+    }
+  }
+
+  // Draw each player container
+  for (i=0;i<players.length;i++) {
+    game.appendChild(drawPlayer(players[i]));
+  }
+
+  // Un-hide the reset button.
+  resetButton.style.display = "block";
+
+  // Clear out player array to prevent old players from being added in subsequent games
+  while (players[0]) {
+    players.pop(0)
+  }
+}
+
+
+/**
  * Main function
- * Creates listeners for start and reset buttons, then links those buttons to
+ * Creates listeners for setup and reset buttons, then links those buttons to
  * anonymous functions that setup game board or reset the board
  */
-function start() {
+function setup() {
   const game = document.getElementById("game-container");
   const resetButton = document.getElementById("reset-button");
   const startButton = document.getElementById("start-button");
   const selector = document.getElementById("number-selector");
-  const players = [];
-  let i;
-  let name;
 
-  startButton.onclick = function () {
-    const numPlayers = Number(document.getElementById("number-selector").value);
-    toggleElementVisibility("starter-container");
-    for (i=0;i<numPlayers;i++) {
-      name = prompt(`Enter Player ${i + 1}'s name: `);
-      // If a player's name isn't input, un-hide starter-container, alert user
-      if (!name) {
-        alert("You must enter a name for each player");
-        toggleElementVisibility("starter-container");
-        return;
-      } else {
-        players.push(name);
-      }
-    }
-    // Draw each player container
-    for (i=0;i<players.length;i++) {
-      game.appendChild(drawPlayer(players[i]));
-    }
-    // Un-hide the reset button.
-    resetButton.style.display = "block";
-    // Clear out player array to prevent old players from being added in subsequent games
-    while (players[0]) {
-      players.pop(0)
+  startButton.onclick = () => {
+    startGame(game, resetButton);
+  };
+
+  startButton.onsubmit = (evt) => {
+    evt.preventDefault();
+    startGame(game, resetButton);
+  };
+
+  selector.onkeyup = (evt) => {
+    if (evt.key === "Enter") {
+      startGame(game, resetButton);
     }
   };
 
-  resetButton.onclick = function () {
+  resetButton.onclick =  () => {
     selector.value = "2";
     removeChildren(game);
     resetButton.style.display = "none";
@@ -173,5 +205,5 @@ function start() {
 }
 
 window.onload = function () {
-  start();
+  setup();
 };
